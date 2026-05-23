@@ -1,11 +1,38 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"slices"
 	"strings"
+	"time"
 )
+
+type Status string
+
+const (
+	Todo       Status = "todo"
+	InProgress Status = "in-progress"
+	Done       Status = "done"
+)
+
+func (s Status) IsValid() bool {
+	switch s {
+	case Todo, InProgress, Done:
+		return true
+	}
+	return false
+
+}
+
+type Task struct {
+	ID          int       `json:"id"`
+	Description string    `json:"description"`
+	Status      Status    `json:"status"`
+	CreatedAt   time.Time `json:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt"`
+}
 
 func checkNumberArgs(expected ...int) bool {
 	if slices.Contains(expected, len(os.Args)) {
@@ -22,10 +49,42 @@ func main() {
 		os.Exit(1)
 	}
 
+	var tasks []Task
+	data, err := os.ReadFile("tasks.json")
+	if err == nil && len(data) > 0 {
+		err := json.Unmarshal(data, &tasks)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error reading tasks: %v\n", err)
+			os.Exit(1)
+		}
+	}
+
+	counter := 1
+	for _, task := range tasks {
+		if task.ID >= counter {
+			counter = task.ID + 1
+		}
+	}
+
+	save := func() {
+		data, err := json.MarshalIndent(tasks, "", " ")
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			os.Exit(1)
+		}
+
+		if err := os.WriteFile("tasks.json", data, 0644); err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			os.Exit(1)
+		}
+	}
+
 	switch cmd := strings.ToLower(os.Args[1]); cmd {
 	case "add":
 		if checkNumberArgs(3) {
-			//TODO
+			task := Task{ID: counter, Description: os.Args[2], Status: Todo, CreatedAt: time.Now(), UpdatedAt: time.Now()}
+			tasks = append(tasks, task)
+			save()
 		}
 
 	case "update":
@@ -57,10 +116,4 @@ func main() {
 		fmt.Fprintln(os.Stderr, "Incorrect command. Try 'add', 'update', 'delete', 'mark-in-progress', 'mark-done' or 'list'.")
 	}
 
-	file, err := os.Create("tasks.json")
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-		os.Exit(1)
-	}
-	defer file.Close()
 }
