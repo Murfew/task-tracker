@@ -33,3 +33,6 @@ go.work.sum
 
 # DB
 tasks.json
+
+# Executable
+task-tracker
