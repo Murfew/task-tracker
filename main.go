@@ -44,7 +44,14 @@ func checkNumberArgs(expected ...int) bool {
 	return false
 }
 
-func findTaskById(tasks []Task, id int) (Task, int) {
+func findTaskById(tasks []Task, arg string) (Task, int) {
+	id, err := strconv.Atoi(arg)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		os.Exit(1)
+
+	}
+
 	index := slices.IndexFunc(tasks, func(task Task) bool {
 		return task.ID == id
 	})
@@ -99,14 +106,7 @@ func main() {
 
 	case "update":
 		if checkNumberArgs(4) {
-			id, err := strconv.Atoi(os.Args[2])
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-				os.Exit(1)
-
-			}
-
-			task, index := findTaskById(tasks, id)
+			task, index := findTaskById(tasks, os.Args[2])
 			task.Description = os.Args[3]
 			tasks[index] = task
 			save()
@@ -115,7 +115,10 @@ func main() {
 
 	case "delete":
 		if checkNumberArgs(3) {
-			//TODO
+			task, index := findTaskById(tasks, os.Args[2])
+			tasks = slices.Delete(tasks, index, index+1)
+			save()
+			fmt.Printf("Task (ID: %d) deleted successfully\n", task.ID)
 		}
 
 	case "mark-in-progress":
