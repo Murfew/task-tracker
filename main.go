@@ -123,12 +123,20 @@ func main() {
 
 	case "mark-in-progress":
 		if checkNumberArgs(3) {
-			//TODO
+			task, index := findTaskById(tasks, os.Args[2])
+			task.Status = InProgress
+			tasks[index] = task
+			save()
+			fmt.Printf("Task (ID: %d) marked as in progress\n", task.ID)
 		}
 
 	case "mark-done":
 		if checkNumberArgs(3) {
-			//TODO
+			task, index := findTaskById(tasks, os.Args[2])
+			task.Status = Done
+			tasks[index] = task
+			save()
+			fmt.Printf("Task (ID: %d) marked as done\n", task.ID)
 		}
 
 	case "list":
