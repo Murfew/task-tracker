@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"slices"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -41,6 +42,14 @@ func checkNumberArgs(expected ...int) bool {
 	fmt.Fprintln(os.Stderr, "Error: incorrect number of arguments.")
 	os.Exit(1)
 	return false
+}
+
+func findTaskById(tasks []Task, id int) (Task, int) {
+	index := slices.IndexFunc(tasks, func(task Task) bool {
+		return task.ID == id
+	})
+
+	return tasks[index], index
 }
 
 func main() {
@@ -85,11 +94,23 @@ func main() {
 			task := Task{ID: counter, Description: os.Args[2], Status: Todo, CreatedAt: time.Now(), UpdatedAt: time.Now()}
 			tasks = append(tasks, task)
 			save()
+			fmt.Printf("Task added successfully (ID: %d)\n", task.ID)
 		}
 
 	case "update":
 		if checkNumberArgs(4) {
-			//TODO
+			id, err := strconv.Atoi(os.Args[2])
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+				os.Exit(1)
+
+			}
+
+			task, index := findTaskById(tasks, id)
+			task.Description = os.Args[3]
+			tasks[index] = task
+			save()
+			fmt.Printf("Task (ID: %d) updated successfully\n", task.ID)
 		}
 
 	case "delete":
