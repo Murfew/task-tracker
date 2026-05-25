@@ -141,7 +141,24 @@ func main() {
 
 	case "list":
 		if checkNumberArgs(2, 3) {
-			//TODO
+			switch len(os.Args) {
+			case 2:
+				for _, task := range tasks {
+					fmt.Printf("%+v\n", task)
+				}
+			case 3:
+				status := strings.ToLower(os.Args[2])
+				if !Status(status).IsValid() {
+					fmt.Fprintf(os.Stderr, "Invalid status: %v. Try 'done', 'in-progress' or 'todo'.\n", status)
+					os.Exit(1)
+				}
+
+				for _, task := range tasks {
+					if task.Status == Status(status) {
+						fmt.Printf("%+v\n", task)
+					}
+				}
+			}
 		}
 
 	default:
